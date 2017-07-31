@@ -20,7 +20,9 @@ export default class Main extends Component {
 		super(props);
 		this.state = {
 			todoItems: [],
+			numberOfTodoItems: 0,
 			completedItems: [],
+			numberOfCompletedItems: 0,
 			itemText: '',
 		}
 	}
@@ -31,6 +33,7 @@ export default class Main extends Component {
 			if (value !== null) {
 				parsedTodoItems = JSON.parse(value);
 				this.setState({todoItems: parsedTodoItems});
+				this.setState({numberOfTodoItems: this.state.todoItems.length})
 			}
 		} catch (error) {
 		}
@@ -40,6 +43,7 @@ export default class Main extends Component {
 			if (value !== null) {
 				parsedTodoItems = JSON.parse(value);
 				this.setState({completedItems: parsedTodoItems});
+				this.setState({numberOfCompletedItems: this.state.completedItems.length})
 			}
 		} catch (error) {
 		}
@@ -65,11 +69,13 @@ export default class Main extends Component {
   			this.setState({todoItems: this.state.todoItems});
   			this.setState({itemText: ''});
   			this.updateTodoItemsDataStorage();
+  			this.setState({numberOfTodoItems: this.state.numberOfTodoItems + 1});
   		} else if (target == 'completedItems') {
   			this.state.completedItems.unshift({'task': this.state.itemText});
   			this.setState({completedItems: this.state.completedItems});
   			this.setState({itemText: ''});
   			this.updateCompletedItemsDataStorage();
+  			this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems + 1});
   		}
   	}
 
@@ -78,10 +84,12 @@ export default class Main extends Component {
   			this.state.todoItems.splice(key, 1);
   			this.setState({todoItems: this.state.todoItems});
   			this.updateTodoItemsDataStorage();
+  			this.setState({numberOfTodoItems: this.state.numberOfTodoItems - 1});
   		} else if (source == 'completedItems') {
   			this.state.completedItems.splice(key, 1);
   			this.setState({completedItems: this.state.completedItems});
   			this.updateCompletedItemsDataStorage();
+  			this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems - 1});
   		}
   	}
 
@@ -100,6 +108,8 @@ export default class Main extends Component {
   		this.setState({completedItems: this.state.completedItems});
   		this.updateTodoItemsDataStorage();
   		this.updateCompletedItemsDataStorage();
+  		this.setState({numberOfTodoItems: this.state.numberOfTodoItems - 1});
+  		this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems + 1});
   	}
 
   	uncompleteItem(key) {
@@ -109,9 +119,12 @@ export default class Main extends Component {
   		this.setState({todoItems: this.state.todoItems});
   		this.updateTodoItemsDataStorage();
   		this.updateCompletedItemsDataStorage();
+  		this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems - 1});
+  		this.setState({numberOfTodoItems: this.state.numberOfTodoItems + 1});
   	}
 
   	render() {
+  		console.log("rendering");
   		let todoItems = this.state.todoItems.map((val, key) => {
   			return <Item completed={false} key={key} keyval={key} value={val} deleteItemMethod={() => this.deleteItem(key, 'todoItems')} checkItemMethod={() => this.checkItem(key, "todoItems")}/>
   		});
@@ -136,10 +149,10 @@ export default class Main extends Component {
 
         		<ScrollView style={styles.scrollContainer}>
         			<View style={styles.todoItems}>
-        				{todoItems}
+        				{this.state.numberOfTodoItems == 0 ? <Text style={styles.message}>You have no uncompleted tasks.</Text> : todoItems}
         			</View>
         			<View style={styles.completedItems}>
-        				{completedItems}
+        				{this.state.numberOfCompletedItems == 0 ? <Text style={styles.message}>You have not completed a task yet.</Text>: completedItems}
         			</View>
         		</ScrollView>
 				
@@ -199,8 +212,9 @@ const styles = StyleSheet.create({
 	completedItems: {
 		marginTop: 5,
 	},
-	hr: {
-		marginTop: 100,
+	message: {
+		textAlign: 'center',
+		marginBottom: 5,
 	}
 });
 

@@ -12,125 +12,148 @@ import {
 	TouchableOpacity,
 	AsyncStorage,
 } from 'react-native';
-import Item from './Item';
-import Hr from 'react-native-hr';
+import Activity from './Activity';
 
 export default class Main extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			todoItems: [],
-			numberOfTodoItems: 0,
-			completedItems: [],
-			numberOfCompletedItems: 0,
-			itemText: '',
+			todo: [],					// array of uncompleted activities.
+			todoArrayIsEmpty: true,
+			completed: [],				// array of completed activities.
+			completedArrayIsEmpty: true,
+			activity: '',				// stocking text written in text field to be inserted into one of two arrays above.
 		}
 	}
 
 	async componentDidMount() {
 		try {
-			value = await AsyncStorage.getItem('todoItems');
+			value = await AsyncStorage.getItem("todo");
 			if (value !== null) {
-				parsedTodoItems = JSON.parse(value);
-				this.setState({todoItems: parsedTodoItems});
-				this.setState({numberOfTodoItems: this.state.todoItems.length})
+				parsedTodo = JSON.parse(value);
+				this.setState({todo: parsedTodo});
+				if (this.state.todo.length != 0) {
+					this.setState({todoArrayIsEmpty: false});
+				}
+			}			
+		} catch (error) {
+		}
+
+		try {
+			value = await AsyncStorage.getItem("completed");
+			if (value !== null) {
+				parsedtodo = JSON.parse(value);
+				this.setState({completed: parsedtodo});
+				if (this.state.completed.length != 0) {
+					this.setState({completedArrayIsEmpty: false});
+				}
 			}
 		} catch (error) {
 		}
+	}
 
+	async updateTodoDataStorage() {
 		try {
-			value = await AsyncStorage.getItem('completedItems');
-			if (value !== null) {
-				parsedTodoItems = JSON.parse(value);
-				this.setState({completedItems: parsedTodoItems});
-				this.setState({numberOfCompletedItems: this.state.completedItems.length})
-			}
+			await AsyncStorage.setItem("todo", JSON.stringify(this.state.todo));
 		} catch (error) {
 		}
 	}
 
-	async updateTodoItemsDataStorage() {
+	async updateCompletedDataStorage() {
 		try {
-			await AsyncStorage.setItem('todoItems', JSON.stringify(this.state.todoItems));
+			await AsyncStorage.setItem("completed", JSON.stringify(this.state.completed));
 		} catch (error) {
 		}
 	}
 
-	async updateCompletedItemsDataStorage() {
-		try {
-			await AsyncStorage.setItem('completedItems', JSON.stringify(this.state.completedItems));
-		} catch (error) {
-		}
+	newActivityButtonPressed() {
+		activity = this.state.activity;
+		this.setState({activity: ''});
+		this.addActivity("todo", activity);
 	}
 
-  	addItem(target) {
-  		if (target == 'todoItems') {
-  			this.state.todoItems.unshift({'task': this.state.itemText});
-  			this.setState({todoItems: this.state.todoItems});
-  			this.setState({itemText: ''});
-  			this.updateTodoItemsDataStorage();
-  			this.setState({numberOfTodoItems: this.state.numberOfTodoItems + 1});
-  		} else if (target == 'completedItems') {
-  			this.state.completedItems.unshift({'task': this.state.itemText});
-  			this.setState({completedItems: this.state.completedItems});
-  			this.setState({itemText: ''});
-  			this.updateCompletedItemsDataStorage();
-  			this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems + 1});
+  	addActivity(target, activity) {
+  		if (target == "todo") {
+  			this.state.todo.unshift({'task': activity});
+  			this.setState({todo: this.state.todo});
+  			this.updateTodoDataStorage();
+  			if (this.state.todo.length == 1) {
+  				this.state.todoArrayIsEmpty = false;
+  			}
+  		} else if (target == "completed") {
+  			this.state.completed.unshift({'task': activity});
+  			this.setState({completed: this.state.completed});
+  			this.updateCompletedDataStorage();
+  			if (this.state.completed.length == 1) {
+  				this.state.completedArrayIsEmpty = false;
+  			}
   		}
   	}
 
-  	deleteItem(key, source) {
-  		if (source == 'todoItems') {
-  			this.state.todoItems.splice(key, 1);
-  			this.setState({todoItems: this.state.todoItems});
-  			this.updateTodoItemsDataStorage();
-  			this.setState({numberOfTodoItems: this.state.numberOfTodoItems - 1});
-  		} else if (source == 'completedItems') {
-  			this.state.completedItems.splice(key, 1);
-  			this.setState({completedItems: this.state.completedItems});
-  			this.updateCompletedItemsDataStorage();
-  			this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems - 1});
+  	deleteActivity(source, activityKey) {
+  		console.log("test");
+  		if (source == "todo") {
+  			this.state.todo.splice(activityKey, 1);
+  			this.setState({todo: this.state.todo});
+  			this.updateTodoDataStorage();
+  			if (this.state.todo.length == 0) {
+  				this.setState({todoArrayIsEmpty: true});
+  			}
+  		} else if (source == "completed") {
+  			this.state.completed.splice(activityKey, 1);
+  			this.setState({completed: this.state.completed});
+  			this.updateCompletedDataStorage();
+  			if (this.state.completed.length == 0) {
+  				this.setState({completedArrayIsEmpty: true});
+  			}
   		}
   	}
 
-  	checkItem(key, source) {
-  		if (source == 'todoItems') {
-  			this.completeItem(key);
+  	completeItem(activityKey) {
+  		var task = this.state.todo[activityKey].task;
+  		this.deleteActivity("todo", activityKey);
+  		this.addActivity("completed", task);
+  	}
+
+  	uncompleteItem(activityKey) {
+  		var task = this.state.completed[activityKey].task;
+  		this.deleteActivity("completed", activityKey);
+  		this.addActivity("todo", task);
+  	}
+
+  	checkActivityButtonPressed(source, activityKey) {
+  		if (source == 'todo') {
+  			this.completeItem(activityKey);
   		} else {
-  			this.uncompleteItem(key);
+  			this.uncompleteItem(activityKey);
   		}
-  	}
-
-  	completeItem(key) {
-  		var task = this.state.todoItems[key].task;
-  		this.deleteItem(key, "todoItems");
-  		this.state.completedItems.unshift({'task': task});
-  		this.setState({completedItems: this.state.completedItems});
-  		this.updateTodoItemsDataStorage();
-  		this.updateCompletedItemsDataStorage();
-  		this.setState({numberOfTodoItems: this.state.numberOfTodoItems - 1});
-  		this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems + 1});
-  	}
-
-  	uncompleteItem(key) {
-  		var task = this.state.completedItems[key].task;
-  		this.deleteItem(key, "completedItems")
-  		this.state.todoItems.unshift({'task': task});
-  		this.setState({todoItems: this.state.todoItems});
-  		this.updateTodoItemsDataStorage();
-  		this.updateCompletedItemsDataStorage();
-  		this.setState({numberOfCompletedItems: this.state.numberOfCompletedItems - 1});
-  		this.setState({numberOfTodoItems: this.state.numberOfTodoItems + 1});
   	}
 
   	render() {
-  		console.log("rendering");
-  		let todoItems = this.state.todoItems.map((val, key) => {
-  			return <Item completed={false} key={key} keyval={key} value={val} deleteItemMethod={() => this.deleteItem(key, 'todoItems')} checkItemMethod={() => this.checkItem(key, "todoItems")}/>
+  		let todo = this.state.todo.map((val, key) => {
+  			return ( 
+	  			<Activity
+	  				completed={false} 
+	  				key={key} 
+	  				keyval={key} 
+	  				value={val} 
+	  				deleteActivityMethod={() => this.deleteActivity("todo", key)} 
+	  				checkActivityMethod={() => this.checkActivityButtonPressed("todo", key)} 
+				/>
+			);
   		});
 
-  		let completedItems = this.state.completedItems.map((val, key) => {
-  			return <Item completed={true} key={key} keyval={key} value={val} deleteItemMethod={() => this.deleteItem(key, 'completedItems')} checkItemMethod={() => this.checkItem(key, "completedItems")}/>
+  		let completed = this.state.completed.map((val, key) => {
+  			return (
+  				<Activity 
+					completed={true} 
+					key={key} 
+					keyval={key} 
+					value={val} 
+					deleteActivityMethod={() => this.deleteActivity("completed", key)} 
+					checkActivityMethod={() => this.checkActivityButtonPressed("completed", key)} 
+				/>
+			);
   		});
 
     	return (
@@ -138,21 +161,21 @@ export default class Main extends Component {
       			<StatusBar barStyle="default" />
         		
         		<View style={styles.header}>
-        			<TextInput onChangeText={(text) => this.setState({itemText: text})} style={styles.textInput} value={this.state.itemText}
+        			<TextInput onChangeText={(text) => this.setState({activity: text})} style={styles.textInput} value={this.state.activity}
         				placeholder='Enter a new activity' placeholderTextColor='white'>
 
         			</TextInput>
-        			<TouchableOpacity onPress={() => this.addItem('todoItems')} style={styles.addButton}>
+        			<TouchableOpacity onPress={() => this.newActivityButtonPressed()} style={styles.addButton}>
 						<Text style={styles.addButtonText}>+</Text>
 					</TouchableOpacity>
         		</View>
 
         		<ScrollView style={styles.scrollContainer}>
-        			<View style={styles.todoItems}>
-        				{this.state.numberOfTodoItems == 0 ? <Text style={styles.message}>You have no uncompleted tasks.</Text> : todoItems}
+        			<View style={styles.todo}>
+        				{this.state.todoArrayIsEmpty ? <Text style={styles.message}>You have no uncompleted tasks.</Text> : todo}
         			</View>
-        			<View style={styles.completedItems}>
-        				{this.state.numberOfCompletedItems == 0 ? <Text style={styles.message}>You have not completed a task yet.</Text>: completedItems}
+        			<View style={styles.completed}>
+        				{this.state.completedArrayIsEmpty ? <Text style={styles.message}>You have not completed a task yet.</Text>: completed}
         			</View>
         		</ScrollView>
 				
@@ -205,11 +228,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 		padding: 10,
 	},
-	todoItems: {
+	todo: {
 		borderBottomColor: 'black',
 		borderBottomWidth: 0.3,
 	},
-	completedItems: {
+	completed: {
 		marginTop: 5,
 	},
 	message: {

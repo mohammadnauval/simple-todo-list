@@ -10,17 +10,20 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-export default class Item extends Component {
+export default class Activity extends Component {
   	render() {
     	return (
-    		<View key={this.props.keyval} style={styles.item}>
-    			<Text style={styles.itemText}>
+    		<View key={this.props.keyval} style={styles.activity}>
+    			<Text style={styles.activityText}>
     				{this.props.value.task}
     			</Text>
 
-    			{this.props.completed ? <Icon name="check-circle" onPress={this.props.checkItemMethod} style={styles.checkIcon} /> : <Icon name="check-circle-o" onPress={this.props.checkItemMethod} style={styles.checkIcon} />}
+    			{this.props.completed ? 
+    				<Icon name="check-circle" onPress={this.props.checkActivityMethod} style={styles.checkIcon} /> : 
+    				<Icon name="check-circle-o" onPress={this.props.checkActivityMethod} style={styles.checkIcon} />
+    			}
 
-    			<Icon name="trash" onPress={this.props.deleteItemMethod} style={styles.deleteIcon}>
+    			<Icon name="trash" onPress={this.props.deleteActivityMethod} style={styles.deleteIcon}>
 				</Icon>
 
     		</View>
@@ -29,14 +32,14 @@ export default class Item extends Component {
 }
 
 const styles = StyleSheet.create({
-	item: {
+	activity: {
 		backgroundColor: '#fff',
 		padding: 5,
 		borderRadius: 5,
 		marginBottom: 5,
 		flexDirection: 'row',
 	},
-	itemText: {
+	activityText: {
 		flex: 0.7,
 		paddingRight: 5,
 	},

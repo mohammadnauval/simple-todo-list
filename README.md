@@ -1,1 +1,1 @@
-This project is created to spend my summer holiday after graduating from college. I wanted to learn how to build app for iOS. The app is created with react-native.
+A simple to-do list app for iOS and Android. The android version is not yet implemented.
